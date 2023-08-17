@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-replicaset
+
+# following spec part will create replica(copies)  
+spec:
+  replicas: 1  # Number of desired replicas
+  selector:
+    matchLabels:
+      app: my-app
+
+# following template will create pod(container)      
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: instagram-container
+          image: nginx
+          ports:
+            - containerPort: 80 
