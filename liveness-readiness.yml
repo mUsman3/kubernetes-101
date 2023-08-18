@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: liveness-readiness-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  namespace: liveness-readiness-ns
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: readiness-liveness-app
+  template:
+    metadata:
+      labels:
+        app: readiness-liveness-app
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx:latest
+          resources:
+            requests:
+              memory: "64Mi"  # Minimum memory required
+              cpu: "50m"      # Minimum CPU required
+            limits:
+              memory: "128Mi" # Maximum memory allowed
+              cpu: "200m"     # Maximum CPU allowed
+          ports:
+            - containerPort: 80 # dev should use port > 1024
+          livenessProbe:
+            httpGet:
+              path: / # /healthz # 200 ok url/app is working fine but when it see url is not working and it got 502 error. 
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: / #/readiness
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: liveness-readiness-service
+  namespace: liveness-readiness-ns
+spec:
+  type: NodePort
+  selector:
+    app: readiness-liveness-app
+  ports:
+    - protocol: TCP
+      port: 8080 # where user will send the request 
+      targetPort: 80 # service will send the request to pod
+      nodePort: 30003  # Specify a port in the NodePort range
