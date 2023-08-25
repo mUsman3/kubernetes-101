@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: roger
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: roger
+spec:
+  replicas: 2 # Initial number of replicas
+  selector:
+    matchLabels:
+      app: my-app-label  # Replace with your app's label
+  template:
+    metadata:
+      labels:
+        app: my-app-label  # Replace with your app's label
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx:1.21.1  # Replace with your desired NGINX image
+          ports:
+            - containerPort: 80  # Port that the container listens on
+          resources:
+            requests:
+              memory: "64Mi"  # Minimum memory required
+              cpu: "50m"      # Minimum CPU required
+            limits:
+              memory: "128Mi" # Maximum memory allowed
+              cpu: "200m"     # Maximum CPU allowed
+  # Scaling settings
+  minReadySeconds: 5  # Minimum time a replica must be ready before being considered healthy
+  strategy:
+    type: RollingUpdate  # Rolling update strategy
+    rollingUpdate:
+      maxUnavailable: 1  # Maximum number of unavailable replicas during update
+      maxSurge: 1       # Maximum number of new replicas during update
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deployment-service
+  namespace: roger
+spec:
+  type: NodePort
+  selector:
+    app: my-app-label 
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
